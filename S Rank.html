@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水藍魔力寶貝 | S階套花攻略系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0f18;
+            --surface-dark: #121b2a;
+            --surface-light: #1c2638;
+            --gold-primary: #d4af37;
+            --gold-light: #fbe69b;
+            --gold-glow: rgba(212, 175, 55, 0.3);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.03), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.03), transparent 25%);
+            min-height: 100vh;
+        }
+
+        /* 頂部標題發光效果 */
+        .title-glow {
+            background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px var(--gold-glow);
+        }
+
+        /* 花朵質感標籤 (深色模式半透明發光) */
+        .flower-tag {
+            padding: 0.15rem 0.6rem;
+            border-radius: 0.375rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            backdrop-filter: blur(4px);
+        }
+        .f-red { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; box-shadow: 0 0 10px rgba(239, 68, 68, 0.1); }
+        .f-blue { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }
+        .f-green { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; box-shadow: 0 0 10px rgba(34, 197, 94, 0.1); }
+        .f-yellow { background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.4); color: #fde047; box-shadow: 0 0 10px rgba(234, 179, 8, 0.1); }
+
+        /* 分頁按鈕設計 */
+        .tab-nav {
+            scrollbar-width: none; /* Firefox */
+        }
+        .tab-nav::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+        .tab-btn {
+            position: relative;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn:hover { color: var(--gold-light); }
+        .tab-btn.active {
+            color: var(--gold-primary);
+            font-weight: 700;
+            border-bottom: 2px solid var(--gold-primary);
+            text-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        /* 內容區塊切換動畫 */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 玻璃擬態卡片 */
+        .glass-card {
+            background: var(--surface-dark);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        /* 實戰流程視覺化 UI */
+        .flow-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .step-pill {
+            background: var(--surface-light);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            transition: transform 0.2s;
+        }
+        .step-pill:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .step-action {
+            background: rgba(212, 175, 55, 0.08);
+            color: var(--gold-light);
+            border-color: rgba(212, 175, 55, 0.3);
+            font-size: 0.8rem;
+        }
+        .flow-arrow {
+            color: rgba(255,255,255,0.2);
+            font-size: 1.2rem;
+        }
+        .step-final {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-light);
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+    </style>
+</head>
+<body class="pb-20 antialiased selection:bg-yellow-900 selection:text-yellow-100">
+
+    <!-- 頁首與標題 -->
+    <header class="pt-16 pb-12 px-6 text-center relative">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <h1 class="text-4xl md:text-5xl font-black mb-4 tracking-wider flex items-center justify-center gap-4">
+            <span class="text-2xl opacity-70">✦</span>
+            <span class="title-glow">S階套花系統指南</span>
+            <span class="text-2xl opacity-70">✦</span>
+        </h1>
+        <p class="text-slate-400 font-light tracking-widest text-sm md:text-base">CROSSGATE FLOWER SYNTHESIS PROTOCOL</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 md:px-6">
+
+        <!-- 核心警告 (高級感設計) -->
+        <div class="glass-card mb-12 border-l-4 border-l-red-500/80 bg-red-950/20 backdrop-blur-sm relative">
+            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-red-900/10 to-transparent pointer-events-none"></div>
+            <div class="p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center relative z-10">
+                <div class="flex-shrink-0 bg-red-500/10 p-4 rounded-full border border-red-500/20">
+                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-red-300 font-bold text-xl tracking-wide mb-2 flex items-center gap-2">
+                        核心絕對規則
+                    </h3>
+                    <p class="text-slate-300 leading-relaxed text-sm md:text-base">
+                        與傳送石對話時，<span class="text-white font-bold border-b border-red-500/50 pb-0.5">身上絕對不可持有兩朵(含)以上的花</span>，否則系統將全數收走。請務必善用 <span class="text-amber-200">丟掉(或存倉)</span> 進行替換。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 導航列 -->
+        <nav class="flex overflow-x-auto tab-nav border-b border-slate-700/50 mb-10 pb-1">
+            <button onclick="switchTab('combo')" class="tab-btn active whitespace-nowrap px-6 py-4 text-slate-400 font-medium flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                黃綠雙開同步 (推薦)
+            </button>
+            <button onclick="switchTab('red')" class="tab-btn whitespace-nowrap px-6 py-4 text-slate-400 font-medium">紅線流程</button>
+            <button onclick="switchTab('blue')" class="tab-btn whitespace-nowrap px-6 py-4 text-slate-400 font-medium">藍線流程</button>
+            <button onclick="switchTab('green')" class="tab-btn whitespace-nowrap px-6 py-4 text-slate-400 font-medium">綠線(單解)</button>
+            <button onclick="switchTab('yellow')" class="tab-btn whitespace-nowrap px-6 py-4 text-slate-400 font-medium">黃線(單解)</button>
+        </nav>
+
+        <!-- 內容區：黃綠雙開 (最高效率) -->
+        <div id="combo" class="tab-content active">
+            <div class="mb-10 text-center max-w-3xl mx-auto">
+                <p class="text-slate-400 font-light leading-relaxed">
+                    此方法為效率之最。黃綠線的第4階花朵彼此互為前置條件，雙開同步進行可於終點直接交換，完美省去單解的重複勞動。
+                </p>
+            </div>
+            
+            <div class="glass-card p-8 mb-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-gold-primary rounded-full" style="background-color: var(--gold-primary);"></span>
+                    第一階段：前置物資入庫 (存放於銀行)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-300">
+                    <div class="bg-surface-light p-6 rounded-xl border border-slate-700/50" style="background-color: var(--surface-light);">
+                        <h4 class="text-white font-medium mb-4 pb-2 border-b border-slate-700">基礎花朵</h4>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex items-center gap-3">綠線拿 <span class="flower-tag f-green">綠1</span> 過石變 <span class="flower-tag f-green">綠2</span> ➔ 存倉</li>
+                            <li class="flex items-center gap-3">黃線拿 <span class="flower-tag f-yellow">黃1</span> 過石變 <span class="flower-tag f-yellow">黃2</span> ➔ 存倉</li>
+                            <li class="flex items-center gap-3">黃/紅線合力做 <span class="flower-tag f-yellow">黃3</span> 與 <span class="flower-tag f-red">紅3</span> ➔ 存倉</li>
+                            <li class="flex items-center gap-3">藍/綠線合力做 <span class="flower-tag f-blue">藍3</span> 與 <span class="flower-tag f-green">綠3</span> ➔ 存倉</li>
+                        </ul>
+                    </div>
+                    <div class="bg-surface-light p-6 rounded-xl border border-slate-700/50" style="background-color: var(--surface-light);">
+                        <h4 class="text-white font-medium mb-4 pb-2 border-b border-slate-700">進階花朵</h4>
+                        <ul class="space-y-4 text-sm">
+                            <li class="leading-loose">
+                                <span class="text-blue-300 font-bold">藍線角色：</span>拿藍1變藍2(存倉)。領綠2過石變綠3<span class="text-slate-500">(丟掉或存倉)</span>。領黃3過石變 <span class="flower-tag f-yellow">黃4</span> ➔ 存倉
+                            </li>
+                            <li class="leading-loose">
+                                <span class="text-red-300 font-bold">紅線角色：</span>拿紅1變紅2(存倉)。領黃2過石變黃3<span class="text-slate-500">(丟掉或存倉)</span>。領綠3過石變 <span class="flower-tag f-green">綠4</span> ➔ 存倉
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-gold-primary rounded-full" style="background-color: var(--gold-primary);"></span>
+                    第二階段：實戰跑法流程
+                </h3>
+                
+                <!-- 綠線實戰 UI -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="px-3 py-1 bg-green-900/30 text-green-400 border border-green-500/30 rounded text-sm font-bold tracking-wider">綠線實戰</div>
+                        <div class="text-sm text-slate-400 flex items-center gap-2">
+                            銀行需備：<span class="flower-tag f-blue text-xs">藍2</span> <span class="flower-tag f-red text-xs">紅3</span> <span class="flower-tag f-yellow text-xs">黃4</span>
+                        </div>
+                    </div>
+                    <div class="flow-container">
+                        <div class="step-pill">老鼠拿 <span class="flower-tag f-green">綠1</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill">領 <span class="flower-tag f-blue">藍2</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill">領 <span class="flower-tag f-red">紅3</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill">領 <span class="flower-tag f-yellow">黃4</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-final">與黃線交易取得 <span class="flower-tag f-green text-xs ml-1">綠4</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill text-white">過石找露比</div>
+                    </div>
+                </div>
+
+                <!-- 黃線實戰 UI -->
+                <div>
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="px-3 py-1 bg-yellow-900/30 text-yellow-400 border border-yellow-500/30 rounded text-sm font-bold tracking-wider">黃線實戰</div>
+                        <div class="text-sm text-slate-400 flex items-center gap-2">
+                            銀行需備：<span class="flower-tag f-red text-xs">紅2</span> <span class="flower-tag f-blue text-xs">藍3</span> <span class="flower-tag f-green text-xs">綠4</span>
+                        </div>
+                    </div>
+                    <div class="flow-container">
+                        <div class="step-pill">老鼠拿 <span class="flower-tag f-yellow">黃1</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill">領 <span class="flower-tag f-red">紅2</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill">領 <span class="flower-tag f-blue">藍3</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill">領 <span class="flower-tag f-green">綠4</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill step-final">與綠線交易取得 <span class="flower-tag f-yellow text-xs ml-1">黃4</span></div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="step-pill text-white">過石找露比</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 內容區：紅線 -->
+        <div id="red" class="tab-content">
+            <div class="glass-card p-8 mb-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-gold-primary rounded-full" style="background-color: var(--gold-primary);"></span>
+                    前置作業 (存入銀行)
+                </h3>
+                <ol class="space-y-4 text-slate-300 text-sm md:text-base pl-2 border-l border-slate-700 ml-2">
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">藍/綠線：</span>進迷宮拿花，過石變 <span class="flower-tag f-blue">藍2</span> <span class="flower-tag f-green">綠2</span>。互相交易後上2F，變 <span class="flower-tag f-blue">藍3</span> <span class="flower-tag f-green">綠3</span>。<br>把 <span class="flower-tag f-blue border-yellow-500/50">藍3</span> 交給黃線存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">黃/紅線：</span>進迷宮拿花，過石變 <span class="flower-tag f-yellow">黃2</span> <span class="flower-tag f-red">紅2</span>。互相交易。紅線拿著 <span class="flower-tag f-yellow">黃2</span> 原地待命。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-gold-primary">
+                        <span class="text-white font-medium">黃線：</span>拿著紅2過石變紅3<span class="text-slate-500">(丟掉或存倉)</span>。到2F傳石領出 <span class="flower-tag f-blue">藍3</span>，過石變 <span class="flower-tag f-blue shadow-[0_0_10px_rgba(212,175,55,0.3)] border-gold-primary">藍4 存入銀行</span>。
+                    </li>
+                </ol>
+            </div>
+
+            <div class="glass-card p-8 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-red-500/5 blur-[80px] rounded-full pointer-events-none"></div>
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-red-500 rounded-full"></span>
+                    紅線實戰流程
+                </h3>
+                <div class="mb-6 text-sm text-slate-400 flex items-center gap-3">
+                    <span class="border border-slate-700 px-2 py-1 rounded bg-slate-800/50">身上/銀行需具備</span>
+                    <span class="flower-tag f-yellow text-xs">黃2</span>
+                    <span class="flower-tag f-green text-xs">綠3</span>
+                    <span class="flower-tag f-blue text-xs">藍4</span>
+                </div>
+                <div class="flow-container border-red-500/10 bg-red-950/10">
+                    <div class="step-pill">老鼠拿 <span class="flower-tag f-red">紅1</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-yellow">黃2</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-green">綠3</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-blue">藍4</span></div>
+                    <div class="flow-arrow text-red-400/50">➔</div>
+                    <div class="step-pill text-white border-red-500/30 bg-red-500/10">過石找露比</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 內容區：藍線 -->
+        <div id="blue" class="tab-content">
+            <div class="glass-card p-8 mb-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-gold-primary rounded-full" style="background-color: var(--gold-primary);"></span>
+                    前置作業 (存入銀行)
+                </h3>
+                <ol class="space-y-4 text-slate-300 text-sm md:text-base pl-2 border-l border-slate-700 ml-2">
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">黃/紅線：</span>進迷宮拿花，過石變 <span class="flower-tag f-yellow">黃2</span> <span class="flower-tag f-red">紅2</span>。互相交易後上2F，變 <span class="flower-tag f-yellow">黃3</span> <span class="flower-tag f-red">紅3</span>。<br>把 <span class="flower-tag f-red border-green-500/50">紅3</span> 交給綠線存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">綠/藍線：</span>進迷宮拿花，過石變 <span class="flower-tag f-green">綠2</span> <span class="flower-tag f-blue">藍2</span>。互相交易。藍線拿著 <span class="flower-tag f-green">綠2</span> 原地待命。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-gold-primary">
+                        <span class="text-white font-medium">綠線：</span>拿著藍2過石變藍3<span class="text-slate-500">(丟掉或存倉)</span>。到2F傳石領出 <span class="flower-tag f-red">紅3</span>，過石變 <span class="flower-tag f-red shadow-[0_0_10px_rgba(212,175,55,0.3)] border-gold-primary">紅4 存入銀行</span>。
+                    </li>
+                </ol>
+            </div>
+
+            <div class="glass-card p-8 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/5 blur-[80px] rounded-full pointer-events-none"></div>
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                    藍線實戰流程
+                </h3>
+                <div class="mb-6 text-sm text-slate-400 flex items-center gap-3">
+                    <span class="border border-slate-700 px-2 py-1 rounded bg-slate-800/50">身上/銀行需具備</span>
+                    <span class="flower-tag f-green text-xs">綠2</span>
+                    <span class="flower-tag f-yellow text-xs">黃3</span>
+                    <span class="flower-tag f-red text-xs">紅4</span>
+                </div>
+                <div class="flow-container border-blue-500/10 bg-blue-950/10">
+                    <div class="step-pill">老鼠拿 <span class="flower-tag f-blue">藍1</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-green">綠2</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-yellow">黃3</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-red">紅4</span></div>
+                    <div class="flow-arrow text-blue-400/50">➔</div>
+                    <div class="step-pill text-white border-blue-500/30 bg-blue-500/10">過石找露比</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 內容區：綠線單解 -->
+        <div id="green" class="tab-content">
+            <div class="border border-amber-500/20 bg-amber-500/5 text-amber-200/80 p-4 rounded-xl text-sm mb-8 flex items-center gap-3">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                此為邊緣人單解跑法，過程極度繁瑣，強烈建議切換至頂部的「黃綠雙開同步」。
+            </div>
+            
+            <div class="glass-card p-8 mb-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-gold-primary rounded-full" style="background-color: var(--gold-primary);"></span>
+                    前置作業 (存入銀行)
+                </h3>
+                <ol class="space-y-4 text-slate-300 text-sm md:text-base pl-2 border-l border-slate-700 ml-2">
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">綠線：</span>拿 <span class="flower-tag f-green">綠1</span> 過石變 <span class="flower-tag f-green">綠2</span> ➔ 存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">黃/紅線：</span>拿花過石變2階，互相交易上2F變 <span class="flower-tag f-yellow">黃3</span> <span class="flower-tag f-red">紅3</span> ➔ 存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">藍線：</span>拿 <span class="flower-tag f-blue">藍1</span> 過石變 <span class="flower-tag f-blue">藍2</span> ➔ 存倉。然後領出 <span class="flower-tag f-green">綠2</span>。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">藍線：</span>用綠2過石變綠3<span class="text-slate-500">(丟掉或存倉)</span>。領出 <span class="flower-tag f-yellow">黃3</span> 過石變 <span class="flower-tag f-yellow">黃4</span> ➔ 存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-red-500">
+                        <span class="text-white font-medium">最困難一步：</span>此時銀行已有 藍2、紅3、黃4。<b>但還缺綠4！</b>必須請「黃線」走完一趟流程幫忙做出 <span class="flower-tag f-green border-red-500">綠4</span>。
+                    </li>
+                </ol>
+            </div>
+
+            <div class="glass-card p-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-green-500 rounded-full"></span>
+                    綠線實戰流程
+                </h3>
+                <div class="mb-6 text-sm text-slate-400 flex items-center gap-3 flex-wrap">
+                    <span class="border border-slate-700 px-2 py-1 rounded bg-slate-800/50">身上/銀行需具備</span>
+                    <span class="flower-tag f-blue text-xs">藍2</span>
+                    <span class="flower-tag f-red text-xs">紅3</span>
+                    <span class="flower-tag f-yellow text-xs">黃4</span>
+                    <span class="flower-tag f-green text-xs">綠4</span>
+                </div>
+                <div class="flow-container border-green-500/10 bg-green-950/10">
+                    <div class="step-pill">拿 <span class="flower-tag f-green">綠1</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-blue">藍2</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-red">紅3</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-yellow">黃4</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-green">綠4</span></div>
+                    <div class="flow-arrow text-green-400/50">➔</div>
+                    <div class="step-pill text-white border-green-500/30 bg-green-500/10">過石打王</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 內容區：黃線單解 -->
+        <div id="yellow" class="tab-content">
+            <div class="border border-amber-500/20 bg-amber-500/5 text-amber-200/80 p-4 rounded-xl text-sm mb-8 flex items-center gap-3">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                此為邊緣人單解跑法，過程極度繁瑣，強烈建議切換至頂部的「黃綠雙開同步」。
+            </div>
+            
+            <div class="glass-card p-8 mb-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-gold-primary rounded-full" style="background-color: var(--gold-primary);"></span>
+                    前置作業 (存入銀行)
+                </h3>
+                <ol class="space-y-4 text-slate-300 text-sm md:text-base pl-2 border-l border-slate-700 ml-2">
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">黃線：</span>拿 <span class="flower-tag f-yellow">黃1</span> 過石變 <span class="flower-tag f-yellow">黃2</span> ➔ 存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">藍/綠線：</span>拿花過石變2階，互相交易上2F變 <span class="flower-tag f-green">綠3</span> <span class="flower-tag f-blue">藍3</span> ➔ 存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">紅線：</span>拿 <span class="flower-tag f-red">紅1</span> 過石變 <span class="flower-tag f-red">紅2</span> ➔ 存倉。然後領出 <span class="flower-tag f-yellow">黃2</span>。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-slate-500">
+                        <span class="text-white font-medium">紅線：</span>用黃2過石變黃3<span class="text-slate-500">(丟掉或存倉)</span>。領出 <span class="flower-tag f-green">綠3</span> 過石變 <span class="flower-tag f-green">綠4</span> ➔ 存倉。
+                    </li>
+                    <li class="relative pl-6 before:content-[''] before:absolute before:-left-[5px] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-red-500">
+                        <span class="text-white font-medium">最困難一步：</span>此時銀行已有 紅2、藍3、綠4。<b>但還缺黃4！</b>必須請「綠線」走完一趟流程幫忙做出 <span class="flower-tag f-yellow border-red-500">黃4</span>。
+                    </li>
+                </ol>
+            </div>
+
+            <div class="glass-card p-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-yellow-500 rounded-full"></span>
+                    黃線實戰流程
+                </h3>
+                <div class="mb-6 text-sm text-slate-400 flex items-center gap-3 flex-wrap">
+                    <span class="border border-slate-700 px-2 py-1 rounded bg-slate-800/50">身上/銀行需具備</span>
+                    <span class="flower-tag f-red text-xs">紅2</span>
+                    <span class="flower-tag f-blue text-xs">藍3</span>
+                    <span class="flower-tag f-green text-xs">綠4</span>
+                    <span class="flower-tag f-yellow text-xs">黃4</span>
+                </div>
+                <div class="flow-container border-yellow-500/10 bg-yellow-950/10">
+                    <div class="step-pill">拿 <span class="flower-tag f-yellow">黃1</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-red">紅2</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-blue">藍3</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-green">綠4</span></div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill step-action">過石,丟掉(或存倉)</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="step-pill">領 <span class="flower-tag f-yellow">黃4</span></div>
+                    <div class="flow-arrow text-yellow-400/50">➔</div>
+                    <div class="step-pill text-white border-yellow-500/30 bg-yellow-500/10">過石打王</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function switchTab(tabId) {
+            // 隱藏所有內容與移除激活狀態
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+                setTimeout(() => {
+                    if(!content.classList.contains('active')) content.style.display = 'none';
+                }, 400); // 等待動畫結束
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 顯示目標內容與設定激活狀態
+            const targetContent = document.getElementById(tabId);
+            targetContent.style.display = 'block';
+            // 強制重繪以觸發動畫
+            void targetContent.offsetWidth; 
+            targetContent.classList.add('active');
+            
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
